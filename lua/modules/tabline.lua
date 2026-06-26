@@ -68,8 +68,10 @@ function M.init()
 
 	-- get all listed buffers only (no hidden/unlisted ones)
 	local buf_list = vim.tbl_filter(function(b)
-		return api.nvim_buf_is_valid(b) and api.nvim_buf_get_option(b, 'buflisted')
-	end, api.nvim_list_bufs())
+    return api.nvim_buf_is_valid(b)
+        and api.nvim_buf_is_loaded(b)
+        and vim.fn.buflisted(b) == 1
+end, api.nvim_list_bufs())
 
 	local current_buf = api.nvim_get_current_buf()
 
