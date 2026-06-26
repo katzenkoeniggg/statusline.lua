@@ -59,7 +59,7 @@ function M.setup(user_config)
 		end,
 	})
 
-	vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, {
+	vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter', 'BufLeave', 'BufWipeout', 'BufDelete' }, {
 		group = 'StatuslineGroup',
 		callback = function()
 			M.tabline_init()
