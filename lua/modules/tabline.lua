@@ -2,7 +2,6 @@
 --                              TabLine                               --
 ------------------------------------------------------------------------
 local M = {}
-
 local api = vim.api
 local cmd = api.nvim_command
 local icons = require('tables._icons')
@@ -25,22 +24,29 @@ local TrimmedDirectory = function(dir)
 	return dir
 end
 
-local getTabLabel = function(n)
-	local current_win = api.nvim_tabpage_get_win(n)
-	local current_buf = api.nvim_win_get_buf(current_win)
-	local file_name = api.nvim_buf_get_name(current_buf)
+local getBufLabel = function(bufnr)
+	local file_name = api.nvim_buf_get_name(bufnr)
+
+	-- handle terminal buffers
 	if string.find(file_name, 'term://') ~= nil then
 		return ' ' .. api.nvim_call_function('fnamemodify', { file_name, ':p:t' })
 	end
+
 	file_name = api.nvim_call_function('fnamemodify', { file_name, ':p:t' })
+
 	if file_name == '' then
 		return 'No Name'
 	end
+
 	local icon = icons.deviconTable[file_name]
+
+	-- show modified indicator
+	local modified = api.nvim_buf_get_option(bufnr, 'modified') and ' ●' or ''
+
 	if icon ~= nil then
-		return icon .. space .. file_name
+		return icon .. space .. file_name .. modified
 	end
-	return file_name
+	return file_name .. modified
 end
 
 local set_colours = function()
@@ -56,22 +62,28 @@ function M.init()
 	if not config.get().tabline then
 		return ''
 	end
-
 	set_colours()
-	local tabline = ''
-	local tab_list = api.nvim_list_tabpages()
-	local current_tab = api.nvim_get_current_tabpage()
 
-	for _, val in ipairs(tab_list) do
-		local file_name = getTabLabel(val)
-		if val == current_tab then
-			tabline = tabline .. '%' .. val .. 'T'
+	local tabline = ''
+
+	-- get all listed buffers only (no hidden/unlisted ones)
+	local buf_list = vim.tbl_filter(function(b)
+		return api.nvim_buf_is_valid(b) and api.nvim_buf_get_option(b, 'buflisted')
+	end, api.nvim_list_bufs())
+
+	local current_buf = api.nvim_get_current_buf()
+
+	for _, bufnr in ipairs(buf_list) do
+		local file_name = getBufLabel(bufnr)
+
+		if bufnr == current_buf then
+			tabline = tabline .. '%' .. bufnr .. 'T'
 			tabline = tabline .. '%#TabLineSelSeparator# ' .. left_separator
 			tabline = tabline .. '%#TabLineSel# ' .. file_name
 			tabline = tabline .. ' %#TabLineSelSeparator#' .. right_separator
 			tabline = tabline .. '%T'
 		else
-			tabline = tabline .. '%' .. val .. 'T'
+			tabline = tabline .. '%' .. bufnr .. 'T'
 			tabline = tabline .. '%#TabLineSeparator# ' .. left_separator
 			tabline = tabline .. '%#TabLine# ' .. file_name
 			tabline = tabline .. ' %#TabLineSeparator#' .. right_separator
@@ -79,6 +91,7 @@ function M.init()
 		end
 	end
 
+	-- right side: show current working directory
 	tabline = tabline .. '%='
 	local dir = api.nvim_call_function('getcwd', {})
 	tabline = tabline
@@ -88,8 +101,8 @@ function M.init()
 		.. TrimmedDirectory(dir)
 		.. '%#TabLineSeparator#'
 		.. right_separator
-
 	tabline = tabline .. space
+
 	return tabline
 end
 
