@@ -53,7 +53,7 @@ function M.setup(user_config)
 
 	vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter', 'WinLeave', 'BufLeave' }, {
 		group = 'StatuslineGroup',
-		pattern = 'NvimTree',
+		pattern = 'Neotree',
 		callback = function()
 			M.simpleLine()
 		end,
