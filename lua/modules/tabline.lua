@@ -8,8 +8,8 @@ local icons = require('tables._icons')
 local config = require('modules.config')
 
 -- Separators
-local left_separator = ''
-local right_separator = ''
+local left_separator = ''
+local right_separator = ''
 local space = ' '
 
 -- Cache for highlight definitions
