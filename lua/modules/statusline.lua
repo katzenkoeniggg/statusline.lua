@@ -22,8 +22,8 @@ local filesize = require('sections._filesize')
 local M = {}
 
 -- Separators
-local left_separator = ''
-local right_separator = ''
+local left_separator = ''
+local right_separator = ''
 
 -- Blank Between Components
 local space = ' '
@@ -151,7 +151,7 @@ end
 -- statusline for simple buffers such as NvimTree where you don't need mode indicators etc
 function M.simpleLine()
 	local statusline = ''
-	return statusline .. '%#Status_Line#' .. bufname.get_buffer_name() .. ''
+	return statusline .. '%#Status_Line#' .. bufname.get_buffer_name() .. ''
 end
 
 ------------------------------------------------------------------------
