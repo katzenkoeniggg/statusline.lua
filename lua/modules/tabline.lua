@@ -8,9 +8,13 @@ local icons = require('tables._icons')
 local config = require('modules.config')
 
 -- Separators
-local left_separator = ''
-local right_separator = ''
+local left_separator = ''
+local right_separator = ''
 local space = ' '
+
+-- Cache for highlight definitions
+local colors_cached = false
+local cached_colors = nil
 
 local TrimmedDirectory = function(dir)
 	local home = os.getenv('HOME')
@@ -29,7 +33,7 @@ local getBufLabel = function(bufnr)
 
 	-- handle terminal buffers
 	if string.find(file_name, 'term://') ~= nil then
-		return ' ' .. api.nvim_call_function('fnamemodify', { file_name, ':p:t' })
+		return ' ' .. api.nvim_call_function('fnamemodify', { file_name, ':p:t' })
 	end
 
 	file_name = api.nvim_call_function('fnamemodify', { file_name, ':p:t' })
@@ -50,12 +54,18 @@ local getBufLabel = function(bufnr)
 end
 
 local set_colours = function()
-	local colors = require('modules.colors').get()
-	cmd('hi TabLineSel gui=Bold guibg=' .. colors.green .. ' guifg=' .. colors.black_fg)
-	cmd('hi TabLineSelSeparator gui=bold guifg=' .. colors.green)
-	cmd('hi TabLine guibg=' .. colors.inactive_bg .. ' guifg=' .. colors.white_fg .. ' gui=None')
-	cmd('hi TabLineSeparator guifg=' .. colors.inactive_bg)
+	-- Only set colors if not already cached for this session
+	if colors_cached then
+		return
+	end
+
+	cached_colors = require('modules.colors').get()
+	cmd('hi TabLineSel gui=Bold guibg=' .. cached_colors.green .. ' guifg=' .. cached_colors.black_fg)
+	cmd('hi TabLineSelSeparator gui=bold guifg=' .. cached_colors.green)
+	cmd('hi TabLine guibg=' .. cached_colors.inactive_bg .. ' guifg=' .. cached_colors.white_fg .. ' gui=None')
+	cmd('hi TabLineSeparator guifg=' .. cached_colors.inactive_bg)
 	cmd('hi TabLineFill guibg=None gui=None')
+	colors_cached = true
 end
 
 function M.init()
@@ -106,6 +116,12 @@ end, api.nvim_list_bufs())
 	tabline = tabline .. space
 
 	return tabline
+end
+
+-- Reset cache when colors change
+function M.reset_cache()
+	colors_cached = false
+	cached_colors = nil
 end
 
 return M

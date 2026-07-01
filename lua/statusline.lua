@@ -14,6 +14,9 @@ local statusline = require('modules.statusline')
 local config = require('modules.config')
 local M = {}
 
+-- Tabline debounce timer
+local tabline_timer = nil
+
 ------------------------------------------------------------------------
 --                              Init                                  --
 ------------------------------------------------------------------------
@@ -27,6 +30,8 @@ function M.setup(user_config)
 		group = 'StatuslineGroup',
 		callback = function()
 			statusline.set_highlights()
+			tabline.reset_cache()
+			M.tabline_init()
 		end,
 	})
 
@@ -59,10 +64,17 @@ function M.setup(user_config)
 		end,
 	})
 
-	vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter', 'BufLeave', 'BufWipeout', 'BufDelete' }, {
+	-- Debounced tabline refresh - avoids rapid redraws on multiple events
+	vim.api.nvim_create_autocmd({ 'BufEnter', 'BufDelete', 'BufWipeout' }, {
 		group = 'StatuslineGroup',
 		callback = function()
-			M.tabline_init()
+			if tabline_timer then
+				vim.fn.timer_stop(tabline_timer)
+			end
+			tabline_timer = vim.fn.timer_start(50, function()
+				M.tabline_init()
+				tabline_timer = nil
+			end)
 		end,
 	})
 end

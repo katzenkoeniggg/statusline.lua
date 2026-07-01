@@ -22,18 +22,27 @@ local filesize = require('sections._filesize')
 local M = {}
 
 -- Separators
-local left_separator = ''
-local right_separator = ''
+local left_separator = ''
+local right_separator = ''
 
 -- Blank Between Components
 local space = ' '
+
+-- Cache mode colors to avoid repeated highlight redraws
+local current_mode_cache = nil
 
 ------------------------------------------------------------------------
 --                             Colours                                --
 ------------------------------------------------------------------------
 
--- Redraw different colors for different mode
+-- Redraw different colors for different mode (with caching)
 local function set_mode_colours(mode)
+	-- Skip if mode hasn't changed
+	if current_mode_cache == mode then
+		return
+	end
+	current_mode_cache = mode
+
 	local colors = require('modules.colors').get()
 	if mode == 'n' then
 		cmd('hi Mode guibg=' .. colors.green .. ' guifg=' .. colors.black_fg .. ' gui=bold')
@@ -61,6 +70,8 @@ function M.set_highlights()
 	cmd('hi Statusline_LSP_Func guibg=' .. colors.statusline_bg .. ' guifg=' .. colors.statusline_fg)
 	-- set InActive highlight
 	cmd('hi InActive guibg=' .. colors.inactive_bg .. ' guifg=' .. colors.white_fg)
+	-- Reset mode cache so colors are recomputed
+	current_mode_cache = nil
 end
 
 ------------------------------------------------------------------------
@@ -118,7 +129,7 @@ function M.activeLine()
 	statusline = statusline .. '%#Statusline_LSP_Func# ' .. lsp.current_function()
 
 	-- Scrollbar
-	-- statusline = statusline.."%#Status_Line#"..vim.call('Scrollbar')..space
+	-- statusline = statusline..."%#Status_Line#"..vim.call('Scrollbar')..space
 
 	-- Component: Modified, Read-Only, Filesize, Row/Col
 	statusline = statusline .. '%#Status_Line#' .. bufmod.is_buffer_modified()
@@ -140,7 +151,7 @@ end
 -- statusline for simple buffers such as NvimTree where you don't need mode indicators etc
 function M.simpleLine()
 	local statusline = ''
-	return statusline .. '%#Status_Line#' .. bufname.get_buffer_name() .. ''
+	return statusline .. '%#Status_Line#' .. bufname.get_buffer_name() .. ''
 end
 
 ------------------------------------------------------------------------
